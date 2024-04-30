@@ -1,22 +1,29 @@
 import logging
 import warnings
 
-
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import ElasticNet
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
+from urllib.parse import urlparse
 
 import mlflow
 import mlflow.sklearn
 from mlflow.models import infer_signature
+import os
 
-logging.basicConfig(filename='test.log',level=logging.INFO,filemode='w')
+
+os.environ['MLFLOW_TRACKING_URI']="https://dagshub.com/tarun9804/ML_Flow.mlflow"
+os.environ['MLFLOW_TRACKING_USERNAME']='tarun9804'
+os.environ['MLFLOW_TRACKING_PASSWORD']='4e7d8d2629680323134dfbd443b2f7e0521a8a93'
+
+logging.basicConfig(filename='test.log', level=logging.INFO, filemode='w')
 logger = logging.getLogger(__name__)
 logger.info('execution started')
 
 logging.debug('execution 1 started')
+
 
 def eval_metrics(actual, pred):
     rmse = np.sqrt(mean_squared_error(actual, pred))
@@ -28,8 +35,8 @@ def eval_metrics(actual, pred):
 warnings.filterwarnings("ignore")
 np.random.seed(40)
 
-in_alpha = 0.2
-in_l1_ratio = 0.7
+in_alpha = 0.3
+in_l1_ratio = 0.4
 
 # Read the wine-quality csv file from the URL
 csv_url = (
@@ -85,5 +92,10 @@ with mlflow.start_run():
     mlflow.log_metric("r2", r2)
     mlflow.log_metric("mae", mae)
 
-    mlflow.sklearn.log_model(lr, "model", signature=signature)
+    remote_server_uri = "https://dagshub.com/tarun9804/ML_Flow.mlflow"
+    mlflow.set_tracking_uri(os.getenv('MLFLOW_TRACKING_URI'))
+
+    tracking_url_type = urlparse(mlflow.get_tracking_uri()).scheme
+
+    mlflow.sklearn.log_model(lr, "model", registered_model_name="ElasticNet")
     logging.info('execution completed')
